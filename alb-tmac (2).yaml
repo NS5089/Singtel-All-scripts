@@ -1,0 +1,151 @@
+Description: "this template deploy alb on given public subnets and configure launch templates for external access"
+Parameters:
+  InstanceTypeApplication:
+    Description: Allowed instance types for Application
+    Type: String
+    Default: t2.medium
+    AllowedValues:
+      - t2.medium
+      - t2.large
+      - t2.xlarge
+    ConstraintDescription: must be a valid ec2 instance type
+  KeyName:
+    Description: The EC2 Key Pair to allow SSH access to the instances
+    Type: AWS::EC2::KeyPair::KeyName
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+Mappings:
+  AWSInstanceType2Arch:
+    t2.medium:
+      Arch: HVM64
+    t2.large:
+      Arch: HVM64
+    t2.xlarge:
+      Arch: HVM64
+    a1.medium:
+      Arch: HVM64
+    a2.large:
+      Arch: HVM64
+    a3.xlarge:
+      Arch: HVM64
+  AWSRegionArch2ApplicationAMI:
+    us-east-1:
+      HVM64: ami-0fe6de971ab142780
+Resources:
+  ApplicationScalingGroup:
+    Type: AWS::AutoScaling::AutoScalingGroup
+    Properties:
+      VPCZoneIdentifier:
+        - !ImportValue PrivateSubnet1
+        - !ImportValue PrivateSubnet2
+      LaunchConfigurationName: !Ref ApplicationLaunchConfig
+      MaxSize: 2
+      MinSize: 1
+      DesiredCapacity: 1
+      TargetGroupARNs:
+        - !Ref ApplicationTargetGroup
+    UpdatePolicy:
+      AutoScalingRollingUpdate:
+        WillReplace: true
+
+  ApplicationLaunchConfig:
+    Type: AWS::AutoScaling::LaunchConfiguration
+    Properties:
+      KeyName: !Ref KeyName
+      ImageId:
+        !FindInMap [
+          AWSRegionArch2ApplicationAMI,
+          !Ref "AWS::Region",
+          !FindInMap [
+            AWSInstanceType2Arch,
+            !Ref "InstanceTypeApplication",
+            Arch,
+          ],
+        ]
+      InstanceType: !Ref InstanceTypeApplication
+      SecurityGroups:
+        - !Ref ApplicationSecurityGroup
+
+  ALBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      VpcId: !ImportValue VPC
+      GroupDescription: Enable HTTP/HTTPS access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: 443
+          ToPort: 443
+          CidrIp: !Ref SSHLocation
+        - IpProtocol: tcp
+          FromPort: 3389
+          ToPort: 3389
+          CidrIp: !Ref SSHLocation
+
+  ElasticALB:
+    Type: AWS::ElasticLoadBalancingV2::LoadBalancer
+    Properties:
+      IpAddressType: ipv4
+      Scheme: internet-facing
+      SecurityGroups:
+        - !Ref ALBSecurityGroup
+      Subnets:
+        - !ImportValue PublicSubnet1
+        - !ImportValue PublicSubnet2
+      Type: application
+
+  ElasticALBListener:
+    Type: AWS::ElasticLoadBalancingV2::Listener
+    Properties:
+      LoadBalancerArn: !Ref ElasticALB
+      DefaultActions:
+        - Type: forward
+          TargetGroupArn: !Ref ApplicationTargetGroup
+      Port: 80
+      Protocol: HTTP
+
+  ApplicationTargetGroup:
+    Type: AWS::ElasticLoadBalancingV2::TargetGroup
+    Properties:
+      Port: 80
+      Protocol: HTTP
+      VpcId: !ImportValue VPC
+      HealthCheckIntervalSeconds: 30
+      HealthCheckPath: /
+      HealthCheckPort: 80
+      HealthCheckProtocol: HTTP
+      HealthCheckTimeoutSeconds: 5
+      HealthyThresholdCount: 2
+      Matcher:
+        HttpCode: "200,202,302,404,403,401"
+
+  ApplicationSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !ImportValue VPC
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          CidrIp: !Ref SSHLocation
+          FromPort: 22
+          ToPort: 22
+  ApplicationSecurityGroupIngress:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !GetAtt [ApplicationSecurityGroup, GroupId]
+      IpProtocol: tcp
+      FromPort: 80
+      ToPort: 80
+      SourceSecurityGroupId: !GetAtt [ALBSecurityGroup, GroupId]
+Outputs:
+  URL:
+    Description: "URL of the load balancer"
+    Value: !Join ["", ["http://", !GetAtt [ElasticALB, DNSName]]]

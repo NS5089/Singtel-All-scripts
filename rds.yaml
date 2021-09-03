@@ -1,0 +1,70 @@
+Description: Create RDS for Microsoft SQL Server
+Parameters:
+  DBInstanceClass:
+    Description: Allowed instance types for RDS
+    Type: String
+    Default: db.t2.small
+    AllowedValues:
+      - db.t2.small
+      - db.t2.large
+      - db.t2.xlarge
+    ConstraintDescription: must be a valid db instance type
+  Engine:
+    Description: Allowed engine type for RDS
+    Type: String
+    Default: sqlserver-ee
+    AllowedValues:
+      - sqlserver-ee
+      - sqlserver-se
+      - sqlserver-ex
+      - sqlserver-web
+    ConstraintDescription: must be a valid db engine type
+  Password:
+    NoEcho: "true"
+    Description: The DB password
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    AllowedPattern: "^[a-zA-Z0-9]*$"
+  UserName:
+    Description: The DB username
+    Type: String
+    MinLength: 4
+    MaxLength: 8
+    Default: tetherfi
+  WebServerSecurityGroup:
+    Type: AWS::EC2::SecurityGroup::Id
+    Description: security groups from applications side/ this can be refer directly from output
+Resources:
+  RDS:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      VPCSecurityGroups:
+        - !GetAtt DBEC2SecurityGroup.GroupId
+      AllocatedStorage: 20
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: !Ref Engine
+      MasterUsername: !Ref UserName
+      MasterUserPassword: !Ref Password
+      DBSubnetGroupName: !Ref DBSubnetGroup
+      PubliclyAccessible: true
+  DBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: "Subnet group for RDS"
+      SubnetIds:
+        - !ImportValue PrivateSubnet1
+        - !ImportValue PrivateSubnet2
+  DBEC2SecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Database port access
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "1433"
+          ToPort: "1433"
+          SourceSecurityGroupName: !Ref WebServerSecurityGroup
+Outputs:
+  InstanceId:
+    Description: InstanceId of the newly created RDS Instance
+    Value: !Ref RDS

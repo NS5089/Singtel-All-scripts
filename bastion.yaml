@@ -1,0 +1,50 @@
+Description: "Windows bastion host deployment"
+Parameters:
+  KeyName:
+    Description: Name of an existing EC2 KeyPair for the bastion host
+    Type: "AWS::EC2::KeyPair::KeyName"
+    ConstraintDescription: must be the name of an existing EC2 KeyPair.
+  InstanceType:
+    Description: Amazon EC2 instance type
+    Type: String
+    Default: t2.micro
+    AllowedValues:
+      - t1.micro
+      - t2.micro
+      - t2.small
+      - t2.medium
+    ConstraintDescription: must be a valid EC2 instance type.
+  SourceCidrForRDP:
+    Description: allow rdp from public machine
+    Type: String
+    MinLength: "9"
+    MaxLength: "18"
+    AllowedPattern: '^([0-9]+\.){3}[0-9]+\/[0-9]+$'
+    Default: 0.0.0.0/0
+Mappings:
+  AWSRegion2AMI:
+    us-east-1:
+      HVM64: ami-0fe6de971ab142780
+Resources:
+  BastionSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      GroupDescription: Enable RDP
+      VpcId: !ImportValue VPC
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: "3389"
+          ToPort: "3389"
+          CidrIp: !Ref SourceCidrForRDP
+  BastionHost:
+    Type: "AWS::EC2::Instance"
+    Properties:
+      InstanceType: !Ref InstanceType
+      ImageId: !FindInMap [AWSRegion2AMI, !Ref "AWS::Region", HVM64]
+      SecurityGroupIds:
+        - !GetAtt [BastionSecurityGroup, GroupId]
+      KeyName: !Ref KeyName
+      SubnetId: !ImportValue PublicSubnet1
+
+      
+    
