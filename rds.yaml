@@ -8,6 +8,9 @@ Parameters:
       - db.t2.small
       - db.t2.large
       - db.t2.xlarge
+      - db.t3.small
+      - db.t3.large
+      - db.t3.xlarge
     ConstraintDescription: must be a valid db instance type
   Engine:
     Description: Allowed engine type for RDS
@@ -56,14 +59,18 @@ Resources:
         - !ImportValue PrivateSubnet1
         - !ImportValue PrivateSubnet2
   DBEC2SecurityGroup:
-    Type: AWS::EC2::SecurityGroup
+    Type: "AWS::EC2::SecurityGroup"
     Properties:
-      GroupDescription: Database port access
-      SecurityGroupIngress:
-        - IpProtocol: tcp
-          FromPort: "1433"
-          ToPort: "1433"
-          SourceSecurityGroupName: !Ref WebServerSecurityGroup
+     VpcId: !ImportValue VPC
+     GroupDescription: Database port access
+  DBEC2SecurityGroupIngress:
+    Type: "AWS::EC2::SecurityGroupIngress"
+    Properties:
+      GroupId: !GetAtt [DBEC2SecurityGroup, GroupId]
+      IpProtocol: tcp
+      FromPort: "1433"
+      ToPort: "1433"
+      SourceSecurityGroupId: !Ref WebServerSecurityGroup
 Outputs:
   InstanceId:
     Description: InstanceId of the newly created RDS Instance
