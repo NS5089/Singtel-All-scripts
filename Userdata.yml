@@ -24,7 +24,7 @@ Parameters:
 Mappings:
   AWSRegion2AMI:
     us-east-1:
-      HVM64: ami-0cd0ec2121eb1594d
+      HVM64: ami-07e78479ce8fe76de
 Resources:
   BastionSecurityGroup:
     Type: "AWS::EC2::SecurityGroup"
@@ -65,11 +65,20 @@ Resources:
         configSets:
           setup:
             - "downloadConfigs"
+            - "downloadBatch"
             - "configChanges"
+            - "buildSetup"
         downloadConfigs:
           sources:
             c:/Tetherfi/Tetherfi1: "https://tetherfi-latest-builds.s3.amazonaws.com/TetherfiHome/Tetherfi_Configs.zip"
+        downloadBatch:
+          sources:
+            c:/Tetherfi/Tetherfi1: "https://tetherfi-latest-builds.s3.amazonaws.com/TetherfiHome/Singtel_Test.zip"
         configChanges:
           commands:
             changeScript:          
               command: "powershell.exe Copy-Item -Path \"C:\\Tetherfi\\Tetherfi1\\Tetherfi_Configs\\*\" -Destination \"C:\\Tetherfi\\TetherfiHome\" -Recurse -force"
+        buildSetup:
+          commands:
+            buildScript:          
+              command: "C:\\Tetherfi\\Tetherfi1\\Singtel_Test.bat"
