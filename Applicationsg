@@ -1,0 +1,23 @@
+Description: "Security group for applications"
+Parameters:
+  SSHLocation:
+    Description: The IP address range that can be used to SSH to the EC2 instances
+    Type: String
+    MinLength: 9
+    MaxLength: 18
+    Default: "0.0.0.0/0"
+Resources:
+  ApplicationSecurityGroup:
+    Type: "AWS::EC2::SecurityGroup"
+    Properties:
+      VpcId: !ImportValue VPC
+      GroupDescription: Enable SSH access and HTTP from the load balancer only
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          CidrIp: !Ref SSHLocation
+          FromPort: 22
+          ToPort: 22
+Outputs:
+  ApplicationSecurityGroup:
+    Description: "Application security group"
+    Value: !Ref ApplicationSecurityGroup
