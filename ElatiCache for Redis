@@ -33,6 +33,7 @@ Resources:
       NumNodeGroups: 1
       Port: 6379
       ReplicasPerNodeGroup: 0
+      TransitEncryptionEnabled: true
       ReplicationGroupDescription: Sample Redis group for scaling
       SecurityGroupIds:
         - !Ref RedisSecurityGroup
