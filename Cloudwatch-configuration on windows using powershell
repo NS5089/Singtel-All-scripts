@@ -1,3 +1,8 @@
+https://adamtheautomator.com/cloudwatch-agent/ 
+
+URL we can get the steps details 
+
+
 #1.     Create the IAM Role 
         - go to IAM role craete role and select the (cloudwatchAgentServerPloicy)
 #2.     Attach IAM role to the instance 
