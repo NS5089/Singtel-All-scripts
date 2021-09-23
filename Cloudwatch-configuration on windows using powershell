@@ -1,0 +1,90 @@
+#1.     Create the IAM Role 
+        - go to IAM role craete role and select the (cloudwatchAgentServerPloicy)
+#2.     Attach IAM role to the instance 
+       - go to instance attach the IAM Role in the running instance 
+#3.     Download the cloudwatch agent on the EC2 instance 
+    
+1.      Invoke-WebRequest -Uri https://s3.amazonaws.com/amazoncloudwatch-agent/windows/amd64/latest/AmazonCloudWatchAgent.zip -OutFile $env:TEMP\AmazonCloudWatchAgent.zip
+
+2.      Expand-Archive -Path $env:TEMP\AmazonCloudWatchAgent.zip -DestinationPath $env:TEMP\AmazonCloudWatchAgent
+
+3.      Set-Location -Path $env:TEMP\AmazonCloudWatchAgent
+        .\install.ps1
+
+Note :  open this path in powershell 'C:\Program Files\Amazon\AmazonCloudWatchAgent\'
+
+4.      .\amazon-cloudwatch-agent-config-wizard.exe
+5.      .\amazon-cloudwatch-agent-ctl.ps1 -a fetch-config -m ec2 -c file:'C:\Program Files\Amazon\AmazonCloudWatchAgent\config.json' -s
+
+
+Note: Configure file will generate automatically 
+
+
+Current config as follows:
+{
+        "logs": {
+                "logs_collected": {
+                        "files": {
+                                "collect_list": [
+                                        {
+                                                "file_path": "Root",
+                                                "log_group_name": "Root",
+                                                "log_stream_name": "{instance_id}"
+                                        },
+                                        {
+                                                "file_path": "",
+                                                "log_group_name": ".",
+                                                "log_stream_name": "{instance_id}"
+                                        }
+                                ]
+                        },
+                        "windows_events": {
+                                "collect_list": [
+                                        {
+                                                "event_format": "xml",
+                                                "event_levels": [
+                                                        "VERBOSE",
+                                                        "INFORMATION",
+                                                        "WARNING",
+                                                        "ERROR",
+                                                        "CRITICAL"
+                                                ],
+                                                "event_name": "System",
+                                                "log_group_name": "System",
+                                                "log_stream_name": "{instance_id}"
+                                        }
+                                ]
+                        }
+                }
+        },
+        "metrics": {
+                "append_dimensions": {
+                        "AutoScalingGroupName": "${aws:AutoScalingGroupName}",
+                        "ImageId": "${aws:ImageId}",
+                        "InstanceId": "${aws:InstanceId}",
+                        "InstanceType": "${aws:InstanceType}"
+                },
+                "metrics_collected": {
+                        "LogicalDisk": {
+                                "measurement": [
+                                        "% Free Space"
+                                ],
+                                "metrics_collection_interval": 60,
+                                "resources": [
+                                        "*"
+                                ]
+                        },
+                        "Memory": {
+                                "measurement": [
+                                        "% Committed Bytes In Use"
+                                ],
+                                "metrics_collection_interval": 60
+                        },
+                        "statsd": {
+                                "metrics_aggregation_interval": 60,
+                                "metrics_collection_interval": 10,
+                                "service_address": ":8125"
+                        }
+                }
+        }
+}
