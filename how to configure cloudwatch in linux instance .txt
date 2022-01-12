@@ -1,0 +1,110 @@
+How to install cloudwatch agent in linux machine 
+
+1, Create an Amazon Linux EC2 Instance
+2, Create an IAM Role and attach to EC2 instance
+3, Login to your EC2 instance
+4, Download Agent 
+
+    wget https://s3.amazonaws.com/amazoncloudwatch-agent/linux/amd64/latest/AmazonCloudWatchAgent.zip
+5, Unzip Package
+    unzip AmazonCloudWatchAgent.zip
+6, Install Package
+    sudo ./install.sh
+7, Start config wizard
+   cd /opt/aws/amazon-cloudwatch-agent/bin
+
+   ./amazon-cloudwatch-agent-config-wizard
+8, Choose follow options:
+    On which OS are you planning to use the agent?
+	default choice: [1]:
+
+	Are you using EC2 or On-Premises hosts?
+	default choice: [1]:
+
+	Which user are you planning to run the agent?
+	default choice: [1]:
+
+	Do you want to turn on StatsD daemon?
+	default choice: [1]:
+
+	Which port do you want StatsD daemon to listen to?
+	default choice: [8125]
+
+	What is the collect interval for StatsD daemon?
+	default choice: [1]:
+
+	What is the aggregation interval for metrics collected by StatsD daemon?
+	default choice: [4]:
+
+	Do you want to monitor metrics from CollectD?
+	default choice: [1]:
+
+	Do you want to monitor any host metrics? e.g. CPU, memory, etc.
+	default choice: [1]:
+
+	Do you want to monitor cpu metrics per core? Additional CloudWatch charges may apply.
+	default choice: [1]:
+
+	Do you want to add ec2 dimensions (ImageId, InstanceId, InstanceType, AutoScalingGroupName) into all of your metrics if the info is available?
+	default choice: [1]:
+
+	Would you like to collect your metrics at high resolution (sub-minute resolution)? This enables sub-minute resolution for all metrics, but you can customize for specific metrics in the output json file.
+	default choice: [4]:
+
+	Which default metrics config do you want?
+	default choice: [1]:
+
+	Are you satisfied with the above config? Note: it can be manually customized after the wizard completes to add additional items.
+	default choice: [1]:
+
+	Do you have any existing CloudWatch Log Agent (http://docs.aws.amazon.com/AmazonCloudWatch/latest/logs/AgentReference.html) configuration file to import for migration?
+	choice: [2]:
+
+	Do you want to monitor any log files?
+	default choice: [1]:
+
+	Log file path:
+	/var/log/secure
+
+	Log group name:
+	default choice: [secure]
+
+	Log stream name:
+	default choice: [{instance_id}]
+
+	Do you want to specify any additional log files to monitor?
+	choice: [2]:
+
+    Do you want to store the config in the SSM parameter store?
+	default choice: [1]:
+
+	What parameter store name do you want to use to store your config? (Use 'AmazonCloudWatch-' prefix if you use our managed AWS policy)
+	default choice: [AmazonCloudWatch-linux]
+
+	Trying to fetch the default region based on ec2 metadata...
+	Which region do you want to store the config in the parameter store?
+	default choice: [us-east-1]
+
+	Which AWS credential should be used to send json config to parameter store?
+	1. ASIAY7UO4T4XSD4PQZOX(From SDK)
+	2. Other
+	default choice: [1]:
+
+	Successfully put config to parameter store AmazonCloudWatch-linux.
+	Program exits now.
+
+9,  Start CloudWatch Agent
+    ./amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c ssm:AmazonCloudWatch-linux -s
+	
+	or 
+	
+	./amazon-cloudwatch-agent-ctl -a fetch-config -m ec2 -c config.json -s
+10, And we are done, you can see custom metrics and logs in Cloudwatch
+If you get this error: Error parsing /opt/aws/amazon-cloudwatch-agent/etc/amazon-cloudwatch-agent.toml, open /usr/share/collectd/types.db: no such file or directory
+
+Workaround:
+
+	mkdir /usr/share/collectd
+	touch /usr/share/collectd/types.db
+
+
