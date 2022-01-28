@@ -1,0 +1,68 @@
+ history
+    2  df -h
+    3  uptime
+    4  docker p
+    5  docker ps
+    6  uptime
+    7  ls -la
+    8  pwd
+    9  mkdir openldap
+   10  cd openldap/
+   11  vi Dockerfile
+   12  wget https://gist.githubusercontent.com/wshihadeh/83507d2cd0255b82d4ae0e0e08473d0b/raw/41a6df32396a7bd93bc09d2bfd6f0352441aa1ad/bootstrap.ldif
+   13  ls
+   14  wget https://gist.githubusercontent.com/wshihadeh/3231e3a72b6479838c582b8577557e60/raw/f423ebc9d4378c1954e9e19f2e8fcb7f19755779/docker-compose.yml
+   15  ls -la
+   16  vi bootstrap.ldif 
+   17  vi bootstrap.ldif 
+   18  cat Dockerfile 
+   19  vi Dockerfile 
+   20  cat Dockerfile 
+   21  vi Dockerfile 
+   22  docker build -t tetherfi/openldap:withdata .
+   23  vi docker-compose.yml 
+   24  cat docker-compose.yml 
+   25  sudo curl -L ht
+   25  sudo curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
+   26  sudo chmod +x /usr/local/bin/docker-compose
+   27  docker-compose version
+   28  which docker-compose
+   29  /usr/local/bin/docker-compose --version
+   30  ln -s /usr/local/bin/docker-compose /uss/bin/docker-compose
+   31  ln -s /usr/local/bin/docker-compose /usr/bin/docker-compose
+   32  which docker-compose
+   33  docker-compose version
+   34  ls -la
+   35  docker-compose up 
+   36  vi docker-compose.yml 
+   37  docker-compose up -d
+   38  vi docker-compose.yml 
+   39  docker-compose up 
+   40  docker-compose up -d
+   41  docker-compose ps
+   42  curl -Iv http://localhost:8090
+   43  cat docker-compose.yml 
+   44  ls -la
+   45  cat Dockerfile 
+   46  cat bootstrap.ldif 
+   47  cat docker-compose.yml 
+   48  ls -la
+   49  pwd
+   50  df -h
+   51  docker ps -a
+   52  docker logs -f 2fec90d6fae4 
+   53  ls -la
+   54  cd ../
+   55  zip -r Openldap.zip openldap
+   56  ls -la
+   57  cp Openldap.zip /tmp/
+   58  exit
+   59  yum update -y
+   60  sudo amazon-linux-extras install docker
+   61  docker --version
+   62  systemctl enable docker
+   63  systemctl start docker
+   64  systemctl status docker
+   65  docker ps -a
+   66  exit
+   67  history
